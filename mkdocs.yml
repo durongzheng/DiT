@@ -1,0 +1,6 @@
+site_name: 我的 Python 学习日志
+
+nav:
+  - 首页: index.md
+  - 开发环境: env.md
+  - 安装包: setup.md
