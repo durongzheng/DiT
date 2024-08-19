@@ -1,6 +1,6 @@
-site_name: 我的 Python 学习日志
+site_name: DiT
 
 nav:
   - 首页: index.md
-  - 开发环境: env.md
-  - 安装包: setup.md
+  - 模型: models.md
+  - 安装包: code.md
