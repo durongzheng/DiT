@@ -167,7 +167,7 @@ class DiT(nn.Module):
     """
     def __init__(
         self,
-        input_size=32,
+        input_size=32,      # 潜空间：latent_size = img_size / 8, 512\*512的图片，input_size=512/8=64
         patch_size=2,
         in_channels=4,
         hidden_size=1152,
@@ -192,6 +192,7 @@ class DiT(nn.Module):
         # Will use fixed sin-cos embedding:
         self.pos_embed = nn.Parameter(torch.zeros(1, num_patches, hidden_size), requires_grad=False)
 
+        # 以最大的 DiT-XL/2 为例，depth=28, 有28层DiTBlock, hidden_size=1152, num_heads=16
         self.blocks = nn.ModuleList([
             DiTBlock(hidden_size, num_heads, mlp_ratio=mlp_ratio) for _ in range(depth)
         ])

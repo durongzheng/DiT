@@ -71,6 +71,8 @@ def main(args):
         model.forward_with_cfg, z.shape, z, clip_denoised=False, model_kwargs=model_kwargs, progress=True, device=device
     )
     samples, _ = samples.chunk(2, dim=0)  # Remove null class samples
+
+    # 从潜空间恢复成图片
     samples = vae.decode(samples / 0.18215).sample
 
     # Save and display images:
