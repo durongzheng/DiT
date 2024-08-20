@@ -1,8 +1,10 @@
-# 代码
-## ./models.py
+# ./models.py
+
+models.py 是核心模型的代码，实现 DiTBlock 这个核心块。  
+这个文件，除了模型形状可以根据自己的需求进行定制之外，其它没什么需要修改的。  
 
 ```Python
-# ./model.py 逐行解读。核心模型的代码。为了方便阅读，它原来的注释都被去掉了，包括版权信息。
+# ./models.py 逐行解读。核心模型的代码。为了方便阅读，它原来的注释都被去掉了，包括版权信息。
 
 # 引入包，后边都会用到，没啥说的。
 import torch
@@ -45,12 +47,17 @@ class TimestepEmbedder(nn.Module):
         :return: an (N, D) Tensor of positional embeddings.
         """
         # https://github.com/openai/glide-text2im/blob/main/glide_text2im/nn.py
+        
         half = dim // 2
+        # 创建一个宽度为 dim/2 的一维张量: e ^ (-log(max_period) * [0,...,dim/2]) 
         freqs = torch.exp(
             -math.log(max_period) * torch.arange(start=0, end=half, dtype=torch.float32) / half
         ).to(device=t.device)
+        # 分别扩展 t, freqs 张量为2维张量，t的形状变为[dim/2,1], freqs的形状变为[1,dim/2],二者相乘得到形状为[N,N]的二维张量, N=dim/2。
         args = t[:, None].float() * freqs[None]
+        # 做cos和sin，拼接起来得到形状为[dim/2, dim]的二维张量
         embedding = torch.cat([torch.cos(args), torch.sin(args)], dim=-1)
+        # 如果 dim 是奇数，在最后再拼一列0
         if dim % 2:
             embedding = torch.cat([embedding, torch.zeros_like(embedding[:, :1])], dim=-1)
         return embedding
@@ -102,6 +109,7 @@ class DiTBlock(nn.Module):
     def __init__(self, hidden_size, num_heads, mlp_ratio=4.0, **block_kwargs):
         super().__init__()
         self.norm1 = nn.LayerNorm(hidden_size, elementwise_affine=False, eps=1e-6)
+        # 用的 timm.models.vision_transformer 封装好的 Attention 模块，只需要注意输入形状最后一维要和
         self.attn = Attention(hidden_size, num_heads=num_heads, qkv_bias=True, **block_kwargs)
         self.norm2 = nn.LayerNorm(hidden_size, elementwise_affine=False, eps=1e-6)
         mlp_hidden_dim = int(hidden_size * mlp_ratio)
@@ -111,9 +119,23 @@ class DiTBlock(nn.Module):
             nn.SiLU(),
             nn.Linear(hidden_size, 6 * hidden_size, bias=True)
         )
+```
 
+看图理解下面的 forward 函数:
+输入形状：
+> x: (N, T, D) 空间张量 (图或图的潜空间)，N-batch大小, T = H * W / patch_size ** 2, D = hidden_size  
+> c: (N, D) 扩散步骤和类别标签编码张量之和  
+
+1. Conditioning 输入，先经过MLP(在TimeStepEmbedder中完成mlp)，在这里经过 adaLN-Zero 扩张6倍, 然后再切分为6块：ɑ1,ß1,ʏ1; ɑ2,ß2,ʏ2
+2. ɑ1,ß1,ʏ1 分别对应代码中的 shift_msa, scale_msa, gate_msa; ɑ2,ß2,ʏ2 类似
+3. modulate 起混杂作用：x*(1+scale.unsqueeze(1)) + shift.unsqueeze(1)  
+
+![DiTBlock](./imgs/DiTBlock.jpg "DiTBlock")
+
+```Python
     def forward(self, x, c):
         shift_msa, scale_msa, gate_msa, shift_mlp, scale_mlp, gate_mlp = self.adaLN_modulation(c).chunk(6, dim=1)
+        # 6份数据，分别按照上图中的位置，做自注意力、mlp
         x = x + gate_msa.unsqueeze(1) * self.attn(modulate(self.norm1(x), shift_msa, scale_msa))
         x = x + gate_mlp.unsqueeze(1) * self.mlp(modulate(self.norm2(x), shift_mlp, scale_mlp))
         return x
@@ -186,6 +208,8 @@ class DiT(nn.Module):
         self.apply(_basic_init)
 
         # Initialize (and freeze) pos_embed by sin-cos embedding:
+        # 用的固定位置编码，而不是 ViT 的可学习/训练的1维位置编码, 位置编码方式影响不大
+        
         pos_embed = get_2d_sincos_pos_embed(self.pos_embed.shape[-1], int(self.x_embedder.num_patches ** 0.5))
         self.pos_embed.data.copy_(torch.from_numpy(pos_embed).float().unsqueeze(0))
 
@@ -321,6 +345,8 @@ def get_1d_sincos_pos_embed_from_grid(embed_dim, pos):
 #################################################################################
 #                                   DiT Configs                                  #
 #################################################################################
+
+# 配置模型形状，这或许是唯一需要根据需求调整的地方.
 
 def DiT_XL_2(**kwargs):
     return DiT(depth=28, hidden_size=1152, patch_size=2, num_heads=16, **kwargs)

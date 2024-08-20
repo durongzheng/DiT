@@ -2,5 +2,8 @@ site_name: DiT
 
 nav:
   - 首页: index.md
-  - 模型: models.md
-  - 安装包: code.md
+  - 开发环境: env.md
+  - 代码:
+    - 模型: models_py.md
+    - 训练: train_py.md
+    - 图片生成: sample_py.md

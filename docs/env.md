@@ -9,7 +9,7 @@ VS Code 的扩展组件非常丰富，无论是什么语言，几乎都可以在
 [VS Code的下载链接](https://code.visualstudio.com/download)
 
 安装完成之后，打开 VS Code，左侧工具栏选择“扩展”，在搜索框中搜索并安装一些必要的扩展组件：
-![extensions](../imgs/vscode_extensions.png "扩展组件")
+![extensions](./imgs/vscode_extensions.png "扩展组件")
 * Chinese (Simplified) (简体中文) Language Pack for VS Code: 语言包，安装重启之后菜单显示成中文。
 * Python: VS Code 的 Python 扩展组件，它会自动安装另外两个组件：Pylance 和 Python Debugger。提供的功能包括 Python 代码补全(Intelligence), 自动格式化(formatter)，语法检查(linter)等。
 
