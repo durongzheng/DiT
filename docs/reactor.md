@@ -6,7 +6,7 @@ Stable Diffusion ReActor 插件可以完成图片换脸(swap face)
 
 分析它的代码可知：  
 
-* 面部识别使用 insightface 提供的预训练模型 buffalo_l。核心代码位于 ./scripts/reactor_swapper.py:  
+* 面部识别使用 [insightface](https://insightface.ai/) 提供的预训练模型 buffalo_l。核心代码位于 ./scripts/reactor_swapper.py:  
 
 ```Python
 # line 142-158, 人脸检测使用 insightface 预训练的 buffalo_l
