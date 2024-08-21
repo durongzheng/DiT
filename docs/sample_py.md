@@ -49,7 +49,7 @@ def main(args):
     # 创建 SpacedDiffusion 对象, 做扩散
     diffusion = create_diffusion(str(args.num_sampling_steps))
     
-    # 自动变分编码器用 stabilityai 预训练的 sd-vae-ft-ema，也可以用sd-vae-ft-mse.
+    # 自动变分编码器用 stabilityai 预训练的 sd-vae-ft-mse，也可以用sd-vae-ft-ema.
     vae = AutoencoderKL.from_pretrained(f"stabilityai/sd-vae-ft-{args.vae}").to(device)
 
     # Labels to condition the model with (feel free to change):

@@ -7,3 +7,4 @@ nav:
     - 模型: models_py.md
     - 训练: train_py.md
     - 图片生成: sample_py.md
+  - ReActor: reactor.md
